@@ -299,8 +299,6 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     double dT = 1 / frameRate;
     TTC = -dT / (1 - medianDistRatio);
     cout << "Camera TTC: " << TTC << " s" << endl;
-    writeLog("results.csv", to_string(TTC));
-    writeLog("results.csv", "\n");
 }
 
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
@@ -318,8 +316,6 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     // compute TTC from both measurements
     TTC = minXCurr * dT / (minXPrev - minXCurr);
     cout << "Lidar TTC: " << TTC << " s" << endl;
-    writeLog("results.csv", to_string(TTC));
-    writeLog("results.csv", ",");
 }
 
 int getPrevBoxID(DataFrame prevFrame, cv::DMatch match)
