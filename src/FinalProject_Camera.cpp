@@ -20,6 +20,8 @@
 #include "lidarData.hpp"
 #include "camFusion.hpp"
 
+#include <chrono>
+
 #include "helper.h"
 using namespace std;
 
@@ -68,6 +70,12 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
     // push image into data frame buffer
     DataFrame frame;
     frame.cameraImg = img;
+    dataBuffer.push_back(frame);
+    if (dataBuffer.size() > dataBufferSize)
+    {
+        dataBuffer[0] = dataBuffer[1];
+        dataBuffer.pop_back();
+    }
     dataBuffer.push_back(frame);
 
     /* DETECT & CLASSIFY OBJECTS */
@@ -119,7 +127,7 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
 
     // extract 2D keypoints from current image
     vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-    string detectorType = "ORB";
+    string detectorType = "FAST";
 
     if (detectorType.compare("SHITOMASI") == 0)
     {
@@ -141,16 +149,14 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
     // push keypoints and descriptor for current frame to end of data buffer
     (dataBuffer.end() - 1)->keypoints = keypoints;
 
-
     /* EXTRACT KEYPOINT DESCRIPTORS */
 
     cv::Mat descriptors;
-    string descriptorType = "ORB"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+    string descriptorType = "FREAK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
     descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
 
     // push descriptors for current frame to end of data buffer
     (dataBuffer.end() - 1)->descriptors = descriptors;
-
 
     if (dataBuffer.size() > 1) // wait until at least two images have been processed
     {
@@ -158,9 +164,9 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
         /* MATCH KEYPOINT DESCRIPTORS */
 
         vector<cv::DMatch> matches;
-        string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-        string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-        string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
+        string matcherType = "MAT_BF";     // MAT_BF, MAT_FLANN
+        string descriptorType = "DES_HOG"; // DES_BINARY, DES_HOG
+        string selectorType = "SEL_NN";    // SEL_NN, SEL_KNN
 
         matchDescriptors((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
                          (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,
@@ -168,7 +174,6 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
 
         // store matches in current data frame
         (dataBuffer.end() - 1)->kptMatches = matches;
-
 
         /* TRACK 3D OBJECT BOUNDING BOXES */
 
@@ -180,9 +185,7 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
         // store matches in current data frame
         (dataBuffer.end() - 1)->bbMatches = bbBestMatches;
 
-
         /* COMPUTE TTC ON OBJECT IN FRONT */
-        
 
         // loop over all BB match pairs
         for (auto it1 = (dataBuffer.end() - 1)->bbMatches.begin(); it1 != (dataBuffer.end() - 1)->bbMatches.end(); ++it1)
@@ -209,7 +212,6 @@ void spinOnce(size_t imgIndex, double sensorFrameRate, int dataBufferSize, vecto
             if (currBB->lidarPoints.size() > 0 && prevBB->lidarPoints.size() > 0) // only compute TTC if we have Lidar points
             {
                 computeTTCLidar(prevBB->lidarPoints, currBB->lidarPoints, sensorFrameRate, ttcLidar);
-
 
                 //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
                 //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
@@ -288,11 +290,16 @@ int main(int argc, const char *argv[])
     double ttcCamera = std::numeric_limits<double>::quiet_NaN();
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex += imgStepWidth)
     {
+        auto t_start = std::chrono::high_resolution_clock::now();
 
         spinOnce(imgIndex, sensorFrameRate, dataBufferSize, dataBuffer, ttcLidar, ttcCamera);
         // ttcLidar & ttcCamera are what to be sent to ROS, for first image they are NAN
-        cout << "Lidar : " << ttcLidar << " Camera : " << ttcCamera << endl;
 
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double elapsed_time_sec = std::chrono::duration<double, std::milli>(t_end - t_start).count() / 1000;
+        //cout << elapsed_time_sec << endl;
+
+        cout << "Lidar : " << ttcLidar - elapsed_time_sec << " Camera : " << ttcCamera - elapsed_time_sec << endl;
     } // eof loop over all images
 
     return 0;
