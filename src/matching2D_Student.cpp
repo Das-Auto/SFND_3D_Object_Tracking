@@ -129,10 +129,10 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
             }
         }
 
-         cout<< "*** Neighbourhood *** " << matches.size() << endl;
+        // cout<< "*** Neighbourhood *** " << matches.size() << endl;
     }
 
-    cout << "# keypoints: " << matches.size() << endl;
+    //cout << "# keypoints: " << matches.size() << endl;
     // //write_a("results.csv", "# keypoints: ");
     // //write_a("results.csv", ",");
     //write_a("results.csv", to_string(matches.size()));
@@ -205,10 +205,10 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     }
 
     // perform feature description
-    double t = (double)cv::getTickCount();
+    //double t = (double)cv::getTickCount();
     extractor->compute(img, keypoints, descriptors);
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << endl;
+    //t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    //cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << endl;
     //writeCSV("results.csv", descriptorType);
     //write_file("results.csv", descriptorType);
     // //write_a("results.csv", "descriptor extraction");
@@ -230,7 +230,7 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
     double k = 0.04;
 
     // Apply corner detection
-    double t = (double)cv::getTickCount();
+    //double t = (double)cv::getTickCount();
     vector<cv::Point2f> corners;
     cv::goodFeaturesToTrack(img, corners, maxCorners, qualityLevel, minDistance, cv::Mat(), blockSize, false, k);
 
@@ -243,8 +243,8 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
         newKeyPoint.size = blockSize;
         keypoints.push_back(newKeyPoint);
     }
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    //t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    //cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
     // //write_a("results.csv", "detector extraction");
     // //write_a("results.csv", ",");
     //write_a("results.csv", to_string(t));
@@ -285,7 +285,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     case FAST:
     {
 
-        std::cout << "Fast selected" << std::endl;
+        //std::cout << "Fast selected" << std::endl;
         int threshold = 30;
         bool bNMS = true;
         cv::FastFeatureDetector::DetectorType type = cv::FastFeatureDetector::TYPE_9_16;
@@ -296,7 +296,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     case BRISK:
 
     {
-        std::cout << "BRISK selected" << std::endl;
+        //std::cout << "BRISK selected" << std::endl;
         cv::Ptr<cv::FeatureDetector> detector = cv::BRISK::create();
         //detector->detect(img, keypoints);
         break;
@@ -304,7 +304,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     case ORB:
 
     {
-        std::cout << "ORB selected" << std::endl;
+        //std::cout << "ORB selected" << std::endl;
         cv::Ptr<cv::FeatureDetector> detector = cv::ORB::create();
         //detector->detect(img, keypoints);
         break;
@@ -313,7 +313,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     case AKAZE:
 
     {
-        std::cout << "AKAZE selected" << std::endl;
+        //std::cout << "AKAZE selected" << std::endl;
         cv::Ptr<cv::FeatureDetector> detector = cv::AKAZE::create();
         //detector->detect(img, keypoints);
         break;
@@ -322,17 +322,17 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     case SIFT:
 
     {
-        std::cout << "SIFT selected" << std::endl;
+        //std::cout << "SIFT selected" << std::endl;
         cv::Ptr<cv::FeatureDetector> detector = cv::xfeatures2d::SIFT::create();
         //detector->detect(img, keypoints);
         break;
     }
     };
 
-    double t = (double)cv::getTickCount();
+    //double t = (double)cv::getTickCount();
     detector->detect(img, keypoints);
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << detectorType << " detection with n: " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    //t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    //cout << detectorType << " detection with n: " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
     // //write_a("results.csv", "detector extraction");
     // //write_a("results.csv", ",");
     //write_a("results.csv", to_string(t));
@@ -362,7 +362,7 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
     // Detect Harris corners and normalize output
     cv::Mat dst, dst_norm, dst_norm_scaled;
     dst = cv::Mat::zeros(img.size(), CV_32FC1);
-    double t = (double)cv::getTickCount();
+    //double t = (double)cv::getTickCount();
     cv::cornerHarris(img, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
     cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
     cv::convertScaleAbs(dst_norm, dst_norm_scaled);
@@ -406,12 +406,7 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
         } // eof loop over cols
     }     // eof loop over rows
 
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Harris detection with n: " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
-    // //write_a("results.csv", "detector extraction H");
-    // //write_a("results.csv", ",");
-    //write_a("results.csv", to_string(t));
-    //write_a("results.csv", ",");
+    //t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
 
 
     int count = 0;
